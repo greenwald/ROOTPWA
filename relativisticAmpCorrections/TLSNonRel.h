@@ -1,37 +1,29 @@
 #ifndef TLSNONREL_HH
 #define TLSNONREL_HH
 
+class TLSContrib;
+
+#include "JLS.h"
+
 #include <vector>
 
-#include "TLSContrib.h"
+/// \class TLSNonRel
+/// \brief Non-relativistic LS-coupling contributions
+/// \author Jan.Friedrich@ph.tum.de, Daniel Greenwald
+class TLSNonRel : public JLS
+{
+public:
+    /// Constructor
+    TLSNonRel(const TLSContrib& C);
 
-/*!
-  \class TLSNonRel
-  \brief Non-relativistic LS-coupling contributions
+    void Add(const TLSContrib& C);
+    void Print()  const;
+    void PrintG() const;
 
+private:
 
-  \author Jan.Friedrich@ph.tum.de
-  */
-class TLSNonRel {
-
-	public:
-		TLSNonRel(const TLSContrib* C);
-
-		bool CheckJLS(const TLSContrib* C) const {
-			return (C->GetJ() == _J and C->GetL() == _L and C->GetS() == _S);
-		}
-		void Add(const TLSContrib* C);
-		const long& GetL()   const { return _L; }
-		const long& GetS()   const { return _S; }
-		void Print()  const;
-		void PrintG() const;
-
-	private:
-		long _J;
-		long _L;
-		long _S;
-		std::vector<const TLSContrib*> _RelLS;
-		TFracNum _GnrPrefac;
+    std::vector<TLSContrib> RelLS_;
+    TFracNum GnrPrefac_;
 
 };
 

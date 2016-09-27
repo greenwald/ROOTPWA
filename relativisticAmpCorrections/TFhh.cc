@@ -1,201 +1,145 @@
 #include "TFhh.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-
 #include "ClebschGordanBox.h"
+#include "MathUtils.h"
 
-#include <reportingUtils.hpp>
+#include <algorithm>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
-using namespace std;
+unsigned TFhh::debugLevel_ = 1;
 
-
-unsigned int TFhh::_debugLevel = 1;
-
-
-TFhh::TFhh(const long& J,
-           const long& S1,
-           const long& S2,
-           const long& lambda,
-           const long& nu,
-           const vector<TLSAmpl*>& LSampl,
-           const bool& evenContraction)
-	: _J(J),
-	  _lambda(lambda),
-	  _nu(nu),
-	  _evenContraction(evenContraction),
-	  _LSt(),
-	  _NRLSt()
+//-------------------------
+TFhh::TFhh(unsigned J, const std::array<unsigned, 2>& j, unsigned lambda, unsigned nu,
+           const std::vector<TLSAmpl>& LSampl, bool even_contraction)
+    : J_(J),
+      Lambda_(lambda),
+      Nu_(nu),
+      EvenContraction_(even_contraction),
+      Name_("F_" + std::to_string(Lambda_) + "_" + std::to_string(Nu_))
 {
-	long delta = _lambda - _nu;
-	{
-		stringstream sstr;
-		sstr << "F_" << _lambda << "_" << _nu;
-		_name_str = sstr.str();
+    for (const auto& A : LSampl) {
+        if (A.delta() != abs(Lambda_ - Nu_))
+            continue;
 
-	}
+        auto SpinCouplFac = ClebschGordanBox::instance()->GetCG(A.S(), j[0], j[1])[ClebschGordanBox::CGIndex(j[0], Lambda_, j[1], -Nu_)];
 
-	for (size_t iLS = 0; iLS < LSampl.size(); iLS++) {
-		if ( (LSampl[iLS]->Getdelta() == delta) or (LSampl[iLS]->Getdelta() == -delta) ) {
-			// cout << "iLS=" << iLS << ", delta=" << delta << endl;
-			const vector<TFracNum>& CG3S = ClebschGordanBox::instance()->GetCG(LSampl[iLS]->GetS(), S1, S2);
-			TFracNum SpinCouplFac = CG3S[ClebschGordanBox::CGIndex(S1, _lambda, S2, -_nu)];
-			if (SpinCouplFac == TFracNum::Zero) {
-				if (_debugLevel >= 2) {
-					cout << "Clebsch-Gordan is zero" << endl;
-				}
-			} else {
-				_LSt.push_back(new TLSContrib(LSampl[iLS], delta, SpinCouplFac));
-			}
-		}
-	}
-	if (_debugLevel) {
-		Print();
-	}
+        if (SpinCouplFac != TFracNum::Zero)
+            LSt_.emplace_back(A, Lambda_ - Nu_, SpinCouplFac);
+        else if (debugLevel_ >= 2)
+            std::cout << "Clebsch-Gordan is zero" << std::endl;
+    }
+        
+    if (debugLevel_ > 0)
+        Print();
 }
 
-TFhh::TFhh(const TFhh* sFhh, const char& flag)
-	: _J(sFhh->GetJ()),
-	  _lambda(sFhh->GetLambda()),
-	  _nu(sFhh->GetNu()),
-	  _evenContraction(sFhh->GetEvenContraction()),
-	  _LSt(sFhh->GetLSt()),
-	  _NRLSt()
+//-------------------------
+TFhh::TFhh(const TFhh& sFhh, symmetry s)
 {
-	if (flag != 'i' && flag != 'm') {
-		printErr << "TFhh::TFhh unknown flag " << flag << endl;
-		throw;
-	}
-	if (_debugLevel) {
-		cout << "Initializing from single Amplitude" << endl;
-	}
-	if ( ( (flag == 'i') and ((sFhh->GetJ()) % 2))      or
-	     ( (flag == 'm') and ((sFhh->GetJ()) % 2 == 0)))
-	{
-		cout << sFhh->GetName() << "[symm] = 0" << endl;
-		_LSt = vector<TLSContrib*>();
-	} else {
-		{
-			stringstream sstr;
-			sstr << sFhh->GetName() << "[symm]";
-			_name_str = sstr.str();
-		}
-		if (_debugLevel) {
-			Print();
-		}
-	}
+    *this = sFhh;
+
+    if (debugLevel_)
+        std::cout << "Initializing from single Amplitude" << std::endl;
+
+    if ((s == symmetry::nu_nu and is_odd(sFhh.J())) or (s == symmetry::nu_minus_nu and is_even(sFhh.J()))) {
+        std::cout << sFhh.name() << "[symm] = 0" << std::endl;
+        LSt_.clear();        
+    }
+    else {
+        Name_ += "[symm]";
+        if (debugLevel_)
+            Print();
+    }
 }
 
-TFhh::TFhh(const TFhh* sFhh, const TFhh* xFhh)
-	: _J(sFhh->GetJ()),
-	  _lambda(sFhh->GetLambda()),
-	  _nu(sFhh->GetNu()),
-	  _evenContraction(sFhh->GetEvenContraction()),
-	  _LSt(),
-	  _NRLSt()
+//-------------------------
+void enforce_cancellations(std::vector<TLSContrib>& V)
 {
-	{
-		stringstream sstr;
-		sstr << sFhh->GetName() << "[symm]";
-		_name_str = sstr.str();
-	}
-	if (_J != xFhh->GetJ() or _evenContraction != xFhh->GetEvenContraction()
-			or _lambda != xFhh->GetNu() or _nu != xFhh->GetLambda()) {
-		printErr << "TFhh::TFhh(TFhh *, TFhh*): Something is wrong," << endl
-		         << " source amplitudes for symmetrization do not match" << endl;
-		throw;
-	}
-
-	// Since some LS-terms cancel out, first a max-length array of
-	// LSContrib pointers is filled, and then squeezed to only
-	// non-zero contributions
-
-	const long& Ns = sFhh->GetNterms();
-	const long& Nx = xFhh->GetNterms();
-	vector<TLSContrib*> pLSt;
-	for (long i = 0; i < (Ns+Nx); i++) {
-		TLSContrib* toBeAdded;
-		if (i < Ns) {
-			toBeAdded = sFhh->GetLSt()[i];
-		} else {
-			toBeAdded = xFhh->GetLSt()[i - Ns];
-		}
-		bool foundInPrevterm = false;
-		for (size_t j = 0; j < pLSt.size(); j++) {
-			if (pLSt[j]->SameParameter(toBeAdded)) {
-				foundInPrevterm = true;
-				if (i < Ns) {
-					pLSt[j]->Add(*toBeAdded, false);
-				} else {
-					pLSt[j]->Add(*toBeAdded, true);
-				}
-			}
-		}
-		if (not foundInPrevterm) {
-			if (i < Ns) {
-				pLSt.push_back(new TLSContrib(toBeAdded, false));
-			} else {
-				pLSt.push_back(new TLSContrib(toBeAdded, true));
-			}
-		}
-	}
-
-	for(size_t i = 0; i < pLSt.size(); ++i) {
-		if(pLSt[i]->GetNterms() != 0) {
-			_LSt.push_back(new TLSContrib(pLSt[i], false));
-		}
-	}
-
-	Print();
+    // search for cancelations
+    for (auto it = V.begin() + 1; it != V.end(); ) {
+        // look for duplicate parameters before current iterator
+        auto it2 = std::find(V.begin(), it, *it);
+        // if found
+        if (it2 != it) {
+            // add to find
+            it2->Add(*it, false);
+            // and remove
+            it = V.erase(it);
+        } else
+            ++it;
+    }
 }
 
-void TFhh::NonRelLimit() {
-	for (size_t i = 0; i < _LSt.size(); i++) {
-		if (not _LSt[i]->IsPureRelativistic()) {
-			long jfound = -1;
-			for (size_t j = 0; j < _NRLSt.size(); j++) {
-				if (_NRLSt[j]->CheckJLS(_LSt[i])) {
-					jfound = j;
-					break;
-				}
-			}
-			if (jfound != -1) {
-				_NRLSt[jfound]->Add(_LSt[i]);
-			} else {
-				_NRLSt.push_back(new TLSNonRel(_LSt[i]));
-			}
-		}
-	}
-	cout << _name_str << " (NR) = " << endl;
-	for (size_t j = 0; j < _NRLSt.size(); j++) {
-		cout << "LS=" << _NRLSt[j]->GetL() << _NRLSt[j]->GetS() << ": ";
-		_NRLSt[j]->Print();
-	}
+//-------------------------
+TFhh::TFhh(const TFhh& sFhh, const TFhh& xFhh)
+{
+    if (sFhh.J() != xFhh.J() or sFhh.evenContraction() != xFhh.evenContraction() or
+        sFhh.lambda() != xFhh.nu() or sFhh.nu() != xFhh.lambda())
+        throw std::runtime_error("TFhh::TFhh(const TFhh&, const TFhh&): parameter mismatch");
+    
+    *this = sFhh;
+    NRLSt_.clear();
+    Name_ += "[symm]";
+
+    enforce_cancellations(LSt_);
+
+    auto temp = xFhh.LSt_;
+    enforce_cancellations(temp);
+    LSt_.reserve(LSt_.size() + temp.size());
+    size_t s = LSt_.size();
+    for (const auto& t : temp) {
+        // look for duplicate parameters
+        auto it = std::find(LSt_.begin(), LSt_.begin() + s, t);
+        // if found
+        if (it != LSt_.end())
+            it->Add(t, true);
+        else
+            LSt_.emplace_back(t, true);
+    }
+
+    LSt_.erase(std::remove_if(LSt_.begin(), LSt_.end(), [](const TLSContrib& c){return c.polynomialTerms().empty();}),
+               LSt_.end());
+
+    Print();
 }
 
+//-------------------------
+void TFhh::NonRelLimit()
+{
+    for (const auto& t : LSt_) {
+        if (t.pureRelativistic())
+            continue;
+        auto it = std::find(NRLSt_.begin(), NRLSt_.end(), t);
+        if (it != NRLSt_.end())
+            it->Add(t);
+        else
+            NRLSt_.emplace_back(t);
+    }
+    std::cout << Name_ << " (NR) = " << std::endl;
+    for (const auto& t : NRLSt_) {
+        std::cout << "LS=" << t.L() << t.S() << " => ";
+        t.Print();
+    }
+}
+
+//-------------------------
 void TFhh::PrintNRG() const
 {
-	cout << _name_str << " (NR) = " << endl;
-	for (size_t j = 0; j < _NRLSt.size(); j++) {
-		cout << "LS=" << _NRLSt[j]->GetL() << _NRLSt[j]->GetS() << " => ";
-		_NRLSt[j]->PrintG();
-	}
+    std::cout << Name_ << " (NR) = " << std::endl;
+    for (const auto& t : NRLSt_) {
+        std::cout << "LS=" << t.L() << t.S() << " => ";
+        t.PrintG();
+    }
 }
 
+//-------------------------
 void TFhh::Print() const
 {
-	cout << _name_str << " =";
-	if (_evenContraction) {
-		cout << endl;
-	} else {
-		cout << " (iw)" << endl;
-	}
-	for (size_t iLSt = 0; iLSt < _LSt.size(); iLSt++) {
-		_LSt[iLSt]->Print();
-	}
-	if (GetNterms() == 0) {
-		cout << " 0" << endl;
-	}
+    std::cout << Name_ << " =" << (EvenContraction_ ? "" : " (iw)") << std::endl;
+    for (const auto& t : LSt_)
+        t.Print();
+    if (LSt_.empty())
+        std::cout << " 0" << std::endl;
 }

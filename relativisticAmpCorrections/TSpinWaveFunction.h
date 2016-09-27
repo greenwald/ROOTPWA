@@ -5,29 +5,30 @@
 
 #include "TJwfTensor.h"
 
-class TSpinWaveFunction {
+class TSpinWaveFunction
+{
 
-  public:
+public:
 
-	TSpinWaveFunction(const size_t& J, const char& type);
-	TTensorSum GetTensorSum(const char& name, const long& delta) const;
-	TTensorSum GetSpinCoupledTensorSum(const TSpinWaveFunction& E,
-	                                   const long& delta,
-	                                   const long& S) const;
+    TSpinWaveFunction(const size_t& J, const char& type);
+    TTensorSum GetTensorSum(const char& name, const long& delta) const;
+    TTensorSum GetSpinCoupledTensorSum(const TSpinWaveFunction& E,
+                                       const long& delta,
+                                       const long& S) const;
 
 #if(0)
-	long CheckCGFormula() const;
+    long CheckCGFormula() const;
 #endif
 
-  private:
-	size_t _J;
-	std::vector<long> _mi;
-	std::vector<std::pair<long, TFracNum> > _M_and_coeff;
+private:
+    size_t _J;
+    std::vector<long> _mi;
+    std::vector<std::pair<long, TFracNum> > _M_and_coeff;
 
-	char _type;      // 's' Spin, 'l' Orbital Angular Momentum
-	                 // 'c' Spin conjugated
+    char _type;      // 's' Spin, 'l' Orbital Angular Momentum
+    // 'c' Spin conjugated
 
-	static unsigned int _debugSpinWave;
+    static unsigned int _debugSpinWave;
 
 };
 

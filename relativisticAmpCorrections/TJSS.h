@@ -1,76 +1,38 @@
 #ifndef TJSS_HH
 #define TJSS_HH
 
-#include <string>
-#include <vector>
-#include <utility>
-
-#include "TLSAmpl.h"
 #include "TFhh.h"
+#include "TLSAmpl.h"
 
+#include <array>
+#include <vector>
 
-class TJSS {
+class TJSS
+{
 
-  public:
+public:
 
-	TJSS(long J,
-	     long eJ,
-	     long S1,
-	     long e1,
-	     long S2,
-	     long e2)
-		: _JMother(J),
-		  _etaJ(eJ),
-		  _SDecay1(S1),
-		  _eta1(e1),
-		  _SDecay2(S2),
-		  _eta2(e2),
-		  _LSAmplitudes(),
-		  _FhhAmpl(),
-		  _FhhIdAmpl() { }
+    // contsructor
+    TJSS(unsigned J, int eJ, unsigned S1, int e1, unsigned S2, int e2)
+        : J_(J), P_(eJ), j_({S1, S2}), p_({e1, e2}) {}
 
-	std::vector<TFhh*>& fhh() { return _FhhAmpl; }
+    std::vector<TFhh>& fhh()
+    { return FhhAmpl_; }
 
-	void CalcAmpl();
+    void CalcAmpl();
 
-  private:
+private:
 
-	bool checkSelectionRules(const long& PsiInternal,
-	                         const long& cPsiChi,
-	                         const long& cChiPhi,
-	                         const long& cPsiPhi,
-	                         const long& IndexContractions,
-	                         const long& even_contraction,
-	                         const long& L) const;
+    unsigned J_; // mother spin
+    int P_; // mother parity;
+    std::array<unsigned, 2> j_; // daughter spins
+    std::array<int, 2> p_; // daughter parities
 
-	bool getContractionRank(const long& PsiInternal,
-	                        const long& cPsiChi,
-	                        const long& cPsiPhi,
-	                        const bool& evenContraction,
-	                        std::pair<long, long>& rPair) const;
+    std::vector<TLSAmpl> LSAmplitudes_;
+    std::vector<TFhh>    FhhAmpl_;
+    std::vector<TFhh>    FhhIdAmpl_;
 
-	std::string getContractionPattern(const long& cPsiPhi,
-	                                  const long& cPhiOmega,
-	                                  const long& cPhiEps,
-	                                  const long& PsiInternal,
-	                                  const long& cPsiChi,
-	                                  const long& cChiOmega,
-	                                  const long& cChiEps,
-	                                  const long& cChiPhi,
-	                                  const long& L) const;
-
-	long _JMother;
-	long _etaJ;
-	long _SDecay1;
-	long _eta1;
-	long _SDecay2;
-	long _eta2;
-
-	std::vector<TLSAmpl*> _LSAmplitudes;
-	std::vector<TFhh*>    _FhhAmpl;
-	std::vector<TFhh*>    _FhhIdAmpl;
-
-	static unsigned int _debugLevel;
+    static unsigned int _debugLevel;
 
 };
 

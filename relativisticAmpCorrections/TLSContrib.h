@@ -1,87 +1,94 @@
 #ifndef TLSCONTRIB_HH
 #define TLSCONTRIB_HH
 
+class TLSAmpl;
+
+#include "JLS.h"
+#include "TFracNum.h"
+
+#include <array>
 #include <vector>
 
-#include "TLSAmpl.h"
-#include "TSpinWaveFunction.h"
+struct PolynomialTerm {
 
+    TFracNum PrefactorSquared;
+    std::array<int, 2> Exponents;
 
-struct polynomialTerms {
-
-	polynomialTerms()
-		: squareOfPrefactor(),
-		  exponentOfGammaS(),
-		  exponentOfGammaSigma() { }
-
-	polynomialTerms(const polynomialTerms& factor)
-		: squareOfPrefactor(factor.squareOfPrefactor),
-		  exponentOfGammaS(factor.exponentOfGammaS),
-		  exponentOfGammaSigma(factor.exponentOfGammaSigma)
-	{ }
-
-	void swapExponents() {
-		const long oldExpOfGammaS = exponentOfGammaS;
-		exponentOfGammaS          = exponentOfGammaSigma;
-		exponentOfGammaSigma      = oldExpOfGammaS;
-	}
-
-	TFracNum squareOfPrefactor;
-	long exponentOfGammaS;
-	long exponentOfGammaSigma;
+    /// constructor
+    PolynomialTerm(const TFracNum& pf2, std::array<int, 2> exps)
+    : PrefactorSquared(pf2, Exponents(exps) {}
 };
+
+PolynomialTerm swap_exponents(PolynomialTerm p)
+{ std::swap(p.Exponents[0], p.Exponents[1]); return p; }
+
+using PolynomialTerms = std::vector<PolynomialTerm>;
 
 /*!
  \class TLSContrib
  \brief Relativistic LS-coupling contributions
-
-
  \author Jan.Friedrich@ph.tum.de
  */
-class TLSContrib {
+class TLSContrib : public JLS
+{
+public:
 
-  public:
+    TLSContrib(const TLSAmpl& A, int delta, const TFracNum& scfac);
 
-	TLSContrib(const TLSContrib* b, const bool& particleExchange);
-	TLSContrib(const TLSAmpl* A, const long& delta, const TFracNum& scfac);
+    void Add(const TLSContrib& rhs, bool particle_exchange);
 
-	void Add(const TLSContrib& rhs, bool particleExchange);
+    const bool pureRelativistic() const
+    { return PureRelativistic_; }
 
-	bool        SameParameter(TLSContrib* b) const { return (_J == b->_J and _L == b->_L and _S == b->_S and _cNum == b->_cNum); }
-	size_t      GetNterms()                  const { return _polynomialTerms.size(); }
-	const bool& IsPureRelativistic()         const { return _pureRelativistic; }
-	const long& GetJ()                       const { return _J; }
-	const long& GetL()                       const { return _L; }
-	const long& GetS()                       const { return _S; }
-	const long& GetDelta()                   const { return _delta; }
-	const long& GetRunningNumber()           const { return _cNum; }
+    const int delta() const
+    { return Delta_; }
+    
+    const unsigned contractionNumber() const
+    { return ContractionNumber_; }
+    
+    const TFracNum& spinCG() const
+    { return SpinCG_; }
+    
+    const TFracNum& normFactor() const
+    { return NormFactor_; }
 
-	const TFracNum& GetSpinCG()     const { return _SpinCG; }
-	const TFracNum& GetNormFactor() const { return _NormFactor; }
+    const PolynomialTerms& polynomialTerms() const
+    { return PolynomialTerms_; }
 
-	const std::vector<polynomialTerms>& getPolynomialTerms() const { return _polynomialTerms; }
+    void Print() const;
+    void PrintNR() const;
+    void PrintNRG(TFracNum) const;
 
-	void Print()            const;
-	void PrintNR()          const;
-	void PrintNRG(TFracNum) const;
+    friend TLSContrib exchange_particles(TLSContrib c)
+    {
+        for (auto& p : c.PolynomialTerms_)
+            p = swap_exponents(p);
+        return c;
+    }
 
-  private:
-	long     _J;
-	long     _L;
-	long     _S;
-	long     _cNum;
-	long     _delta;
-	TFracNum _SpinCG;
 
-	TFracNum  _NormFactor;     // Square  of normalisation factor
+private:
+    unsigned ContractionNumber_;
+    int Delta_;
+    TFracNum SpinCG_;
 
-	// TODO: check with jan how this should be named
-	std::vector<polynomialTerms> _polynomialTerms;
+    // Square  of normalisation factor
+    TFracNum  NormFactor_{TFracNum:Zero};
 
-	bool _pureRelativistic;
+    PolynomialTerms PolynomialTerms_;
 
-	static bool _debug;
+    bool PureRelativistic_{false};
+
+    static bool Debug_;
 
 };
+
+/// equality operator
+inline const bool operator==(const TLSContrib& lhs, const TLSContrib& rhs)
+{
+    return static_cast<const JLS&>(lhs) ==  static_cast<const JLS&>(rhs)
+        and lhs.contractionNumber() == rhs.contractionNumber();
+}
+    
 
 #endif

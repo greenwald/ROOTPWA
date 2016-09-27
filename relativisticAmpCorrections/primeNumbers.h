@@ -11,39 +11,40 @@ class TTree;
 
 namespace rpwa {
 
-	class primeNumbers {
+class primeNumbers
+{
 
 
-	  public:
+public:
 
-		typedef unsigned long long entryType;
+    typedef unsigned long long entryType;
 
-		static primeNumbers& instance();
+    static primeNumbers& instance();
 
-		const entryType& primeNumber(const size_t& index);
+    const entryType& primeNumber(const size_t& index);
 
-		bool readCacheFile(const std::string& fileName);
-		~primeNumbers();
+    bool readCacheFile(const std::string& fileName);
+    ~primeNumbers();
 
-		static bool isPrimeNumber(const entryType& number);
+    static bool isPrimeNumber(const entryType& number);
 
-		static const std::string TREE_NAME;
-		static const std::string BRANCH_NAME;
+    static const std::string TREE_NAME;
+    static const std::string BRANCH_NAME;
 
-	  private:
+private:
 
-		primeNumbers();
+    primeNumbers();
 
-		TFile* _cacheFile;
-		TTree* _cacheTree;
-		const entryType _treeEntry;
-		std::vector<entryType> _primeNumberCache;
+    TFile* _cacheFile;
+    TTree* _cacheTree;
+    const entryType _treeEntry;
+    std::vector<entryType> _primeNumberCache;
 
-		static primeNumbers* _instance;
-		const static size_t _blockSize;
-		const static size_t _emergencyCacheSize;
+    static primeNumbers* _instance;
+    const static size_t _blockSize;
+    const static size_t _emergencyCacheSize;
 
-	};
+};
 
 }
 

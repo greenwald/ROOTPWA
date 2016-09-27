@@ -49,6 +49,7 @@ include_directories(
 
 # source files that are compiled into library
 set(SOURCES
+  MathUtils.cc
 	TFracNum.cc
 	ClebschGordanBox.cc
 	TJwfTensor.cc

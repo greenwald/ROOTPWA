@@ -45,88 +45,89 @@
 namespace rpwa {
 
 
-	class isobarAmplitude;
-	typedef boost::shared_ptr<rpwa::isobarAmplitude> isobarAmplitudePtr;
+class isobarAmplitude;
+typedef boost::shared_ptr<rpwa::isobarAmplitude> isobarAmplitudePtr;
 
 
-	class isobarAmplitude {
+class isobarAmplitude
+{
 
-	public:
+public:
 
-		isobarAmplitude();
-		isobarAmplitude(const isobarDecayTopologyPtr& decay);
-		virtual ~isobarAmplitude();
+    isobarAmplitude();
+    isobarAmplitude(const isobarDecayTopologyPtr& decay);
+    virtual ~isobarAmplitude();
 
-		const isobarDecayTopologyPtr& decayTopology   () const { return _decay; }              ///< returns pointer to decay topology
-		void                          setDecayTopology(const isobarDecayTopologyPtr& decay);   ///< sets decay topology
+    const isobarDecayTopologyPtr& decayTopology   () const { return _decay; }              ///< returns pointer to decay topology
+    void                          setDecayTopology(const isobarDecayTopologyPtr& decay);   ///< sets decay topology
 
-		virtual void init();  ///< initializes amplitude; needs to be called when decay topology was changed
+    virtual void init();  ///< initializes amplitude; needs to be called when decay topology was changed
 
-		bool reflectivityBasis    () const { return _useReflectivityBasis; }  ///< returns whether reflectivity basis is used
-		bool boseSymmetrization   () const { return _boseSymmetrize;       }  ///< returns whether Bose symmetrization is used
-		bool isospinSymmetrization() const { return _isospinSymmetrize;    }  ///< returns whether isospin symmetrization is used
-		void enableReflectivityBasis    (const bool flag = true) { _useReflectivityBasis = flag; }  ///< en/disables use of reflectivity basis
-		void enableBoseSymmetrization   (const bool flag = true) { _boseSymmetrize       = flag; }  ///< en/disables use of Bose symmetrization
-		void enableIsospinSymmetrization(const bool flag = true) { _isospinSymmetrize    = flag; }  ///< en/disables use of isospin symmetrization
+    bool reflectivityBasis    () const { return _useReflectivityBasis; }  ///< returns whether reflectivity basis is used
+    bool boseSymmetrization   () const { return _boseSymmetrize;       }  ///< returns whether Bose symmetrization is used
+    bool isospinSymmetrization() const { return _isospinSymmetrize;    }  ///< returns whether isospin symmetrization is used
+    void enableReflectivityBasis    (const bool flag = true) { _useReflectivityBasis = flag; }  ///< en/disables use of reflectivity basis
+    void enableBoseSymmetrization   (const bool flag = true) { _boseSymmetrize       = flag; }  ///< en/disables use of Bose symmetrization
+    void enableIsospinSymmetrization(const bool flag = true) { _isospinSymmetrize    = flag; }  ///< en/disables use of isospin symmetrization
 
-		bool doSpaceInversion() const { return _doSpaceInversion; }  ///< returns whether parity transformation is performed on decay
-		bool doReflection    () const { return _doReflection;     }  ///< returns whether decay is reflected through production plane
-		void enableSpaceInversion(const bool flag = true) { _doSpaceInversion = flag; }  ///< en/disables parity transformation of decay
-		void enableReflection    (const bool flag = true) { _doReflection     = flag; }  ///< en/disables reflection of decay through production plane
+    bool doSpaceInversion() const { return _doSpaceInversion; }  ///< returns whether parity transformation is performed on decay
+    bool doReflection    () const { return _doReflection;     }  ///< returns whether decay is reflected through production plane
+    void enableSpaceInversion(const bool flag = true) { _doSpaceInversion = flag; }  ///< en/disables parity transformation of decay
+    void enableReflection    (const bool flag = true) { _doReflection     = flag; }  ///< en/disables reflection of decay through production plane
 
-		static TLorentzRotation gjTransform(const TLorentzVector& beamLv,
-		                                    const TLorentzVector& XLv);  ///< constructs Lorentz-transformation to X Gottfried-Jackson frame
+    static TLorentzRotation gjTransform(const TLorentzVector& beamLv,
+                                        const TLorentzVector& XLv);  ///< constructs Lorentz-transformation to X Gottfried-Jackson frame
 
-		std::complex<double> amplitude()   const;                         ///< computes amplitude
-		std::complex<double> operator ()() const { return amplitude(); }  ///< computes amplitude
+    std::complex<double> amplitude()   const;                         ///< computes amplitude
+    std::complex<double> operator ()() const { return amplitude(); }  ///< computes amplitude
 
-		virtual std::string   name           ()                  const { return "isobarAmplitude"; }
-		virtual std::ostream& printParameters(std::ostream& out) const;  ///< prints amplitude parameters in human-readable form
-		virtual std::ostream& print          (std::ostream& out) const;  ///< prints amplitude in human-readable form
+    virtual std::string   name           ()                  const { return "isobarAmplitude"; }
+    virtual std::ostream& printParameters(std::ostream& out) const;  ///< prints amplitude parameters in human-readable form
+    virtual std::ostream& print          (std::ostream& out) const;  ///< prints amplitude in human-readable form
 
-		static bool debug() { return _debug; }                             ///< returns debug flag
-		static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
-
-
-	protected:
-
-		void spaceInvertDecay() const;  ///< performs parity transformation on all decay three-momenta
-		void reflectDecay    () const;  ///< performs reflection through production plane on all decay three-momenta
-
-		virtual void transformDaughters() const = 0;  ///< boosts Lorentz-vectors of decay daughters into frames where angular distributions are defined
-
-		virtual std::complex<double> twoBodyDecayAmplitude
-		(const isobarDecayVertexPtr& vertex,
-		 const bool                  topVertex) const = 0;  ///< calculates amplitude for two-body decay a -> b + c; where b and c are stable
-
-		virtual std::complex<double> twoBodyDecayAmplitudeSum
-		(const isobarDecayVertexPtr& vertex,
-		 const bool                  topVertex = false) const;  ///< recursive function that sums up decay amplitudes for all allowed helicitities for all vertices below the given vertex
-
-		virtual std::complex<double> symTermAmp(const std::vector<unsigned int>& fsPartPermMap) const;  ///< returns decay amplitude for a certain permutation of final-state particles
-
-		virtual bool initSymTermMaps();
-
-		isobarDecayTopologyPtr  _decay;                 ///< isobar decay topology with all external information
-		bool                    _useReflectivityBasis;  ///< if set, reflectivity basis is used to calculate the X decay node
-		bool                    _boseSymmetrize;        ///< if set, amplitudes are Bose symmetrized
-		bool                    _isospinSymmetrize;     ///< if set, amplitudes are isospin symmetrized
-		bool                    _doSpaceInversion;      ///< is set, all three-momenta of the decay particles are parity transformed (for test purposes)
-		bool                    _doReflection;          ///< is set, all three-momenta of the decay particles are reflected through production plane (for test purposes)
-		std::vector<symTermMap> _symTermMaps;           ///< array of factors and permutation maps for symmetrization terms
-
-		static bool _debug;  ///< if set to true, debug messages are printed
-
-	};
+    static bool debug() { return _debug; }                             ///< returns debug flag
+    static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
 
 
-	inline
-	std::ostream&
-	operator <<(std::ostream&          out,
-	            const isobarAmplitude& amp)
-	{
-		return amp.print(out);
-	}
+protected:
+
+    void spaceInvertDecay() const;  ///< performs parity transformation on all decay three-momenta
+    void reflectDecay    () const;  ///< performs reflection through production plane on all decay three-momenta
+
+    virtual void transformDaughters() const = 0;  ///< boosts Lorentz-vectors of decay daughters into frames where angular distributions are defined
+
+    virtual std::complex<double> twoBodyDecayAmplitude
+    (const isobarDecayVertexPtr& vertex,
+     const bool                  topVertex) const = 0;  ///< calculates amplitude for two-body decay a -> b + c; where b and c are stable
+
+    virtual std::complex<double> twoBodyDecayAmplitudeSum
+    (const isobarDecayVertexPtr& vertex,
+     const bool                  topVertex = false) const;  ///< recursive function that sums up decay amplitudes for all allowed helicitities for all vertices below the given vertex
+
+    virtual std::complex<double> symTermAmp(const std::vector<unsigned int>& fsPartPermMap) const;  ///< returns decay amplitude for a certain permutation of final-state particles
+
+    virtual bool initSymTermMaps();
+
+    isobarDecayTopologyPtr  _decay;                 ///< isobar decay topology with all external information
+    bool                    _useReflectivityBasis;  ///< if set, reflectivity basis is used to calculate the X decay node
+    bool                    _boseSymmetrize;        ///< if set, amplitudes are Bose symmetrized
+    bool                    _isospinSymmetrize;     ///< if set, amplitudes are isospin symmetrized
+    bool                    _doSpaceInversion;      ///< is set, all three-momenta of the decay particles are parity transformed (for test purposes)
+    bool                    _doReflection;          ///< is set, all three-momenta of the decay particles are reflected through production plane (for test purposes)
+    std::vector<symTermMap> _symTermMaps;           ///< array of factors and permutation maps for symmetrization terms
+
+    static bool _debug;  ///< if set to true, debug messages are printed
+
+};
+
+
+inline
+std::ostream&
+operator <<(std::ostream&          out,
+            const isobarAmplitude& amp)
+{
+    return amp.print(out);
+}
 
 
 } // namespace rpwa

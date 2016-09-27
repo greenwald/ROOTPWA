@@ -11,53 +11,43 @@
 
 using namespace std;
 
-int main(int narg, char* carg[]) {
+int main(int narg, char* carg[])
+{
 
-	if (narg < 4) {
-		cout << endl
-		     << "This program requires 3 input strings for the mother and " << endl
-		     << "the 2 decay particles, each of the form Jp," << endl
-		     << "where J is the spin of the particle and p = +/- its parity" << endl;
+    if (narg < 4) {
+        cout << endl
+             << "This program requires 3 input strings for the mother and " << endl
+             << "the 2 decay particles, each of the form Jp," << endl
+             << "where J is the spin of the particle and p = +/- its parity" << endl;
 
-		return 0;
-	}
-	string fileName = "primeNumberCache.root";
-	if(narg == 5) {
-		fileName = carg[4];
-	}
-	if(not rpwa::primeNumbers::instance().readCacheFile(fileName)) {
-		printErr << "could not read prime number cache file. Aborting..." << endl;
-		return 1;
-	}
+        return 0;
+    }
 
-	int  jmother;
-	char pmother; int pm;
-	int  jdecay1;
-	char pdecay1; int p1;
-	int  jdecay2;
-	char pdecay2; int p2;
+    string fileName = (narg == 5) ? carg[5] : "primeNumberCache.root";
+    if (not rpwa::primeNumbers::instance().readCacheFile(fileName)) {
+        printErr << "could not read prime number cache file. Aborting..." << endl;
+        return 1;
+    }
 
-	sscanf(carg[1], "%d%c", &jmother, &pmother);
-	cout << "Mother particle: " << jmother << pmother << endl;
-	if (pmother=='+') pm= 1;
-	else              pm=-1;
+    int j[3];
+    int p[3];
 
-	sscanf(carg[2], "%1d%c", &jdecay1, &pdecay1);
-	cout << "1. decay particle: " << jdecay1 << pdecay1 << endl;
-	if (pdecay1=='+') p1= 1;
-	else              p1=-1;
+    for (int i = 0; i < 3; ++i) {
+        char c;
+        sscanf(carg[i + 1], "%d%c", &j[i], &c);
+        p[i] = (c == '+') ? 1 : -1;
+    }
 
-	sscanf(carg[3], "%1d%c", &jdecay2, &pdecay2);
-	cout << "2. decay particle: " << jdecay2 << pdecay2 << endl;
-	if (pdecay2=='+') p2= 1;
-	else              p2=-1;
+    cout << "Mother particle:   " << j[0] << parity_to_string(p[0]) << endl;
+    cout << "1. decay particle: " << j[1] << parity_to_string(p[1]) << endl;
+    cout << "2. decay particle: " << j[2] << parity_to_string(p[2]) << endl;
 
-	cout << jmother << "," << pm << ","
-		<< jdecay1 << "," << p1 << ","
-		<< jdecay2 << "," << p2 << endl;
+    cout << j[0] << "," << p[0] << ","
+         << j[1] << "," << p[1] << ","
+         << j[2] << "," << p[2] << endl;
 
-	TJSS jss(jmother, pm, jdecay1, p1, jdecay2, p2);
-	jss.CalcAmpl();
+    TJSS jss(j[0], p[0], j[1], p[1], j[2], p[2]);
+    jss.CalcAmpl();
 
 
 }

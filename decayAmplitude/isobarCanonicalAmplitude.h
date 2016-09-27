@@ -41,44 +41,45 @@
 namespace rpwa {
 
 
-	class isobarCanonicalAmplitude;
-	typedef boost::shared_ptr<isobarCanonicalAmplitude> isobarCanonicalAmplitudePtr;
+class isobarCanonicalAmplitude;
+typedef boost::shared_ptr<isobarCanonicalAmplitude> isobarCanonicalAmplitudePtr;
 
 
-	class isobarCanonicalAmplitude : public isobarAmplitude {
+class isobarCanonicalAmplitude : public isobarAmplitude
+{
 
-	public:
+public:
 
-		isobarCanonicalAmplitude();
-		isobarCanonicalAmplitude(const isobarDecayTopologyPtr& decay);
-		virtual ~isobarCanonicalAmplitude();
+    isobarCanonicalAmplitude();
+    isobarCanonicalAmplitude(const isobarDecayTopologyPtr& decay);
+    virtual ~isobarCanonicalAmplitude();
 
-		std::string name() const { return "isobarCanonicalAmplitude"; }
+    std::string name() const { return "isobarCanonicalAmplitude"; }
 
-		static bool debug() { return _debug; }                             ///< returns debug flag
-		static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
-
-
-	private:
-
-		void transformDaughters() const;  ///< boosts Lorentz-vectors of decay daughters into frames where angular distributions are defined
-
-		std::complex<double> twoBodyDecayAmplitude
-		(const isobarDecayVertexPtr& vertex,
-		 const bool                  topVertex) const;  ///< calculates amplitude for two-body decay a -> b + c; where b and c are stable
-
-		static bool _debug;  ///< if set to true, debug messages are printed
-
-	};
+    static bool debug() { return _debug; }                             ///< returns debug flag
+    static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
 
 
-	inline
-	isobarCanonicalAmplitudePtr
-	createIsobarCanonicalAmplitude(const isobarDecayTopologyPtr& decay)
-	{
-		isobarCanonicalAmplitudePtr amp(new isobarCanonicalAmplitude(decay));
-		return amp;
-	}
+private:
+
+    void transformDaughters() const;  ///< boosts Lorentz-vectors of decay daughters into frames where angular distributions are defined
+
+    std::complex<double> twoBodyDecayAmplitude
+    (const isobarDecayVertexPtr& vertex,
+     const bool                  topVertex) const;  ///< calculates amplitude for two-body decay a -> b + c; where b and c are stable
+
+    static bool _debug;  ///< if set to true, debug messages are printed
+
+};
+
+
+inline
+isobarCanonicalAmplitudePtr
+createIsobarCanonicalAmplitude(const isobarDecayTopologyPtr& decay)
+{
+    isobarCanonicalAmplitudePtr amp(new isobarCanonicalAmplitude(decay));
+    return amp;
+}
 
 
 } // namespace rpwa

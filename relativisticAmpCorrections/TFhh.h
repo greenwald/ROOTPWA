@@ -12,55 +12,71 @@
   \author Jan.Friedrich@ph.tum.de
   */
 
-#include <string>
-#include <vector>
-
 #include "TLSAmpl.h"
 #include "TLSContrib.h"
 #include "TLSNonRel.h"
 
-class TFhh {
+#include <array>
+#include <string>
+#include <vector>
 
-  public:
+class TFhh
+{
 
-	TFhh(const long& J,
-	     const long& S1,
-	     const long& S2,
-	     const long& lambda,
-	     const long& nu,
-	     const std::vector<TLSAmpl*>& LSampl,
-	     const bool& evenContraction);
+public:
 
-	TFhh(const TFhh* sFhh, const char& flag);
-	TFhh(const TFhh* sFhh, const TFhh* xFhh);
+    // constructor
+    TFhh(unsigned J, const std::array<unsigned, 2>& j, unsigned lambda, unsigned nu,
+         const std::vector<TLSAmpl>& LSampl, bool even_contraction);
 
-	size_t                          GetNterms()          const { return _LSt.size(); }
-	bool                            IsNuNu()             const { return (_lambda ==  _nu); }
-	bool                            IsNuMinusNu()        const { return (_lambda == -_nu); }
-	const long&                     GetLambda()          const { return _lambda; }
-	const long&                     GetNu()              const { return _nu;     }
-	const long&                     GetJ()               const { return _J;      }
-	const bool&                     GetEvenContraction() const { return _evenContraction;}
-	const std::vector<TLSContrib*>& GetLSt()             const { return _LSt; }
-	const std::string&              GetName()            const { return _name_str; }
+    enum class symmetry { nu_nu, nu_minus_nu };
+    
+    TFhh(const TFhh& sFhh, symmetry s);
+    TFhh(const TFhh& sFhh, const TFhh& xFhh);
 
-	void NonRelLimit();
-	void PrintNRG() const;
-	void Print()    const;
+    const unsigned lambda() const
+    { return Lambda_; }
 
-  private:
+    const unsigned nu() const
+    { return Nu_; }
 
-	std::string _name_str;
-	long _J;
-	long _lambda;
-	long _nu;
-	bool _evenContraction;
-	std::vector<TLSContrib*> _LSt;
-	std::vector<TLSNonRel*> _NRLSt;
+    const unsigned J() const
+    { return J_; }
+    
+    const bool evenContraction() const
+    { return EvenContraction_; }
+    
+    const std::vector<TLSContrib>& LSt() const
+    { return LSt_; }
 
-	static unsigned int _debugLevel;
+    const std::string& name() const
+    { return Name_; }
+
+    void NonRelLimit();
+    void PrintNRG() const;
+    void Print()    const;
+
+private:
+
+    unsigned J_;
+    unsigned Lambda_;
+    unsigned Nu_;
+    bool EvenContraction_;
+    std::string Name_;
+    std::vector<TLSContrib> LSt_;
+    std::vector<TLSNonRel> NRLSt_;
+
+    static unsigned debugLevel_;
 
 };
 
+inline const bool is_nu_nu(const TFhh& f)
+{ return f.lambda() == f.nu(); }
+
+inline const bool is_nu_minus_nu(const TFhh& f)
+{ return f.lambda() == -f.nu(); }
+
+inline const bool nu_lambda_partners(const TFhh& f, const TFhh& g)
+{ return f.lambda() == g.nu() and f.nu() == g.lambda(); }
 
 #endif

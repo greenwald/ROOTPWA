@@ -44,22 +44,22 @@ bool fsVertex::_debug = false;
 
 
 fsVertex::fsVertex(const particlePtr& fsParticle)
-	: interactionVertex()
+    : interactionVertex()
 {
-	if (not fsParticle) {
-		printErr << "null pointer to final state particle. Aborting..." << endl;
-		throw;
-	}
-	interactionVertex::addInParticle(fsParticle);
-	if (_debug)
-		printDebug << "constructed " << *this << endl;
+    if (not fsParticle) {
+        printErr << "null pointer to final state particle. Aborting..." << endl;
+        throw;
+    }
+    interactionVertex::addInParticle(fsParticle);
+    if (_debug)
+        printDebug << "constructed " << *this << endl;
 }
 
 
 fsVertex::fsVertex(const fsVertex& vert)
-	: interactionVertex()
+    : interactionVertex()
 {
-	*this = vert;
+    *this = vert;
 }
 
 
@@ -71,54 +71,54 @@ fsVertex*
 fsVertex::doClone(const bool cloneInParticles,
                   const bool) const
 {
-	fsVertex* vertexClone = new fsVertex(*this);
-	if (cloneInParticles)
-		vertexClone->cloneInParticles();
-	if (_debug)
-		printDebug << "cloned " << *this << "; " << this << " -> " << vertexClone << " "
-		           << ((cloneInParticles ) ? "in" : "ex") << "cluding incoming particles" << std::endl;
-	return vertexClone;
+    fsVertex* vertexClone = new fsVertex(*this);
+    if (cloneInParticles)
+        vertexClone->cloneInParticles();
+    if (_debug)
+        printDebug << "cloned " << *this << "; " << this << " -> " << vertexClone << " "
+                   << ((cloneInParticles ) ? "in" : "ex") << "cluding incoming particles" << std::endl;
+    return vertexClone;
 }
 
 
 bool
 fsVertex::addInParticle(const particlePtr&)
 {
-	if (_debug)
-		printWarn << "cannot add incoming particle to " << *this << endl;
-	return false;
+    if (_debug)
+        printWarn << "cannot add incoming particle to " << *this << endl;
+    return false;
 }
 
 
 bool
 fsVertex::addOutParticle(const particlePtr&)
 {
-	if (_debug)
-		printWarn << "cannot add outgoing particle to " << *this << endl;
-	return false;
+    if (_debug)
+        printWarn << "cannot add outgoing particle to " << *this << endl;
+    return false;
 }
 
 
 ostream&
 fsVertex::print(ostream& out) const
 {
-	out << name() << ": " << fsParticle()->qnSummary();
-	return out;
+    out << name() << ": " << fsParticle()->qnSummary();
+    return out;
 }
 
 
 ostream&
 fsVertex::dump(ostream& out) const
 {
-	out << name() << ":" << endl
-	    << "    final state particle: " << *fsParticle() << endl;
-	return out;
+    out << name() << ":" << endl
+        << "    final state particle: " << *fsParticle() << endl;
+    return out;
 }
 
 
 ostream&
 fsVertex::printPointers(ostream& out) const
 {
-	out << name() << " " << this << ": final state particle: " << fsParticle() << endl;
-	return out;
+    out << name() << " " << this << ": final state particle: " << fsParticle() << endl;
+    return out;
 }

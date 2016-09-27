@@ -47,404 +47,416 @@ namespace ublas = boost::numeric::ublas;
 
 namespace rpwa {
 
-	class isobarDecayVertex;
-	typedef boost::shared_ptr<isobarDecayVertex> isobarDecayVertexPtr;
+class isobarDecayVertex;
+typedef boost::shared_ptr<isobarDecayVertex> isobarDecayVertexPtr;
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief base class for mass dependences
-	class massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief base class for mass dependences
+class massDependence
+{
 
-	public:
+public:
 
-		massDependence()          { }
-		virtual ~massDependence() { }
+    massDependence()          { }
+    virtual ~massDependence() { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v) = 0;
+    virtual std::complex<double> amp(const isobarDecayVertex& v) = 0;
 
-		virtual std::complex<double> operator ()(const isobarDecayVertex& v) { return amp(v); }
+    virtual std::complex<double> operator ()(const isobarDecayVertex& v) { return amp(v); }
 
-		virtual std::string name() const { return "massDependence"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "massDependence"; }  ///< returns label used in graph visualization, reporting, and key file
 
-		bool operator ==(const massDependence& rhsMassDep) const { return this->isEqualTo(rhsMassDep); }
-		bool operator !=(const massDependence& rhsMassDep) const { return not (*this == rhsMassDep);   }
+    bool operator ==(const massDependence& rhsMassDep) const { return this->isEqualTo(rhsMassDep); }
+    bool operator !=(const massDependence& rhsMassDep) const { return not (*this == rhsMassDep);   }
 
-		virtual std::ostream& print(std::ostream& out) const;
+    virtual std::ostream& print(std::ostream& out) const;
 
-		static bool debug() { return _debug; }                             ///< returns debug flag
-		static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
+    static bool debug() { return _debug; }                             ///< returns debug flag
+    static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
 
 
-	protected:
+protected:
 
-		virtual bool isEqualTo(const massDependence& massDep) const
-		{ return typeid(massDep) == typeid(*this); }  ///< returns whether massDep is of same type as this
+    virtual bool isEqualTo(const massDependence& massDep) const
+    { return typeid(massDep) == typeid(*this); }  ///< returns whether massDep is of same type as this
 
-		static bool _debug;  ///< if set to true, debug messages are printed
+    static bool _debug;  ///< if set to true, debug messages are printed
 
-	};
+};
 
 
-	typedef boost::shared_ptr<massDependence> massDependencePtr;
+typedef boost::shared_ptr<massDependence> massDependencePtr;
 
 
-	inline
-	std::ostream&
-	operator <<(std::ostream&         out,
-	            const massDependence& massDep)
-	{
-		return massDep.print(out);
-	}
+inline
+std::ostream&
+operator <<(std::ostream&         out,
+            const massDependence& massDep)
+{
+    return massDep.print(out);
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief trivial flat mass dependence
-	class flatMassDependence : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief trivial flat mass dependence
+class flatMassDependence : public massDependence
+{
 
-	public:
+public:
 
-		flatMassDependence() : massDependence() { }
-		virtual ~flatMassDependence()           { }
+    flatMassDependence() : massDependence() { }
+    virtual ~flatMassDependence()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex&);
+    virtual std::complex<double> amp(const isobarDecayVertex&);
 
-		virtual std::string name() const { return "flatMassDependence"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "flatMassDependence"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<flatMassDependence> flatMassDependencePtr;
+typedef boost::shared_ptr<flatMassDependence> flatMassDependencePtr;
 
 
-	inline
-	flatMassDependencePtr
-	createFlatMassDependence()
-	{
-		flatMassDependencePtr massDep(new flatMassDependence());
-		return massDep;
-	}
+inline
+flatMassDependencePtr
+createFlatMassDependence()
+{
+    flatMassDependencePtr massDep(new flatMassDependence());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief trivial flat mass dependence over a range
-	class flatRangeMassDependence : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief trivial flat mass dependence over a range
+class flatRangeMassDependence : public massDependence
+{
 
-	public:
+public:
 
-		flatRangeMassDependence() : massDependence() { }
-		virtual ~flatRangeMassDependence()           { }
+    flatRangeMassDependence() : massDependence() { }
+    virtual ~flatRangeMassDependence()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex&);
+    virtual std::complex<double> amp(const isobarDecayVertex&);
 
-		virtual std::string name() const { return "flatRangeMassDependence"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "flatRangeMassDependence"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<flatRangeMassDependence> flatRangeMassDependencePtr;
+typedef boost::shared_ptr<flatRangeMassDependence> flatRangeMassDependencePtr;
 
 
-	inline
-	flatRangeMassDependencePtr
-	createFlatRangeMassDependence()
-	{
-		flatRangeMassDependencePtr massDep(new flatRangeMassDependence());
-		return massDep;
-	}
+inline
+flatRangeMassDependencePtr
+createFlatRangeMassDependence()
+{
+    flatRangeMassDependencePtr massDep(new flatRangeMassDependence());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief relativistic Breit-Wigner with mass-dependent width and Blatt-Weisskopf barrier factors
-	class relativisticBreitWigner : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief relativistic Breit-Wigner with mass-dependent width and Blatt-Weisskopf barrier factors
+class relativisticBreitWigner : public massDependence
+{
 
-	public:
+public:
 
-		relativisticBreitWigner() : massDependence() { }
-		virtual ~relativisticBreitWigner()           { }
+    relativisticBreitWigner() : massDependence() { }
+    virtual ~relativisticBreitWigner()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "relativisticBreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "relativisticBreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<relativisticBreitWigner> relativisticBreitWignerPtr;
+typedef boost::shared_ptr<relativisticBreitWigner> relativisticBreitWignerPtr;
 
 
-	inline
-	relativisticBreitWignerPtr
-	createRelativisticBreitWigner()
-	{
-		relativisticBreitWignerPtr massDep(new relativisticBreitWigner());
-		return massDep;
-	}
+inline
+relativisticBreitWignerPtr
+createRelativisticBreitWigner()
+{
+    relativisticBreitWignerPtr massDep(new relativisticBreitWigner());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief relativistic constant-width s-wave Breit-Wigner
-	class constWidthBreitWigner : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief relativistic constant-width s-wave Breit-Wigner
+class constWidthBreitWigner : public massDependence
+{
 
-	public:
+public:
 
-		constWidthBreitWigner() : massDependence() { }
-		virtual ~constWidthBreitWigner()           { }
+    constWidthBreitWigner() : massDependence() { }
+    virtual ~constWidthBreitWigner()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "constWidthBreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "constWidthBreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<constWidthBreitWigner> constWidthBreitWignerPtr;
+typedef boost::shared_ptr<constWidthBreitWigner> constWidthBreitWignerPtr;
 
 
-	inline
-	constWidthBreitWignerPtr
-	createConstWidthBreitWigner()
-	{
-		constWidthBreitWignerPtr massDep(new constWidthBreitWigner());
-		return massDep;
-	}
+inline
+constWidthBreitWignerPtr
+createConstWidthBreitWigner()
+{
+    constWidthBreitWignerPtr massDep(new constWidthBreitWigner());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief Breit-Wigner for rho(770) -> pi pi
-	/// Breit-Wigner function for L = 1 with the Blatt-Weisskopf barrier
-	/// factor replaced by (2 * q^2) / (q^2 + q0^2) so that
-	/// Gamma = Gamma0 * m0 / m * (q / q0) * (2 * q^2) / (q^2 + q0^2)
-	/// [D. Bisello et al, Phys. Rev. D39 (1989) 701], appendix
-	/// http://dx.doi.org/10.1103/PhysRevD.39.701
-	class rhoBreitWigner : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief Breit-Wigner for rho(770) -> pi pi
+/// Breit-Wigner function for L = 1 with the Blatt-Weisskopf barrier
+/// factor replaced by (2 * q^2) / (q^2 + q0^2) so that
+/// Gamma = Gamma0 * m0 / m * (q / q0) * (2 * q^2) / (q^2 + q0^2)
+/// [D. Bisello et al, Phys. Rev. D39 (1989) 701], appendix
+/// http://dx.doi.org/10.1103/PhysRevD.39.701
+class rhoBreitWigner : public massDependence
+{
 
-	public:
+public:
 
-		rhoBreitWigner() : massDependence() { }
-		virtual ~rhoBreitWigner()           { }
+    rhoBreitWigner() : massDependence() { }
+    virtual ~rhoBreitWigner()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "rhoBreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "rhoBreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<rhoBreitWigner> rhoBreitWignerPtr;
+typedef boost::shared_ptr<rhoBreitWigner> rhoBreitWignerPtr;
 
 
-	inline
-	rhoBreitWignerPtr
-	createRhoBreitWigner()
-	{
-		rhoBreitWignerPtr massDep(new rhoBreitWigner());
-		return massDep;
-	}
+inline
+rhoBreitWignerPtr
+createRhoBreitWigner()
+{
+    rhoBreitWignerPtr massDep(new rhoBreitWigner());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief Breit-Wigner for f_0(980) -> pi pi
-	/// this is used in piPiSWaveAuMorganPenningtonVes for subtraction of f_0(980)
-	/// "Probably this isn't correct S-wave BW form!"
-	class f0980BreitWigner : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief Breit-Wigner for f_0(980) -> pi pi
+/// this is used in piPiSWaveAuMorganPenningtonVes for subtraction of f_0(980)
+/// "Probably this isn't correct S-wave BW form!"
+class f0980BreitWigner : public massDependence
+{
 
-	public:
+public:
 
-		f0980BreitWigner() : massDependence() { }
-		virtual ~f0980BreitWigner()           { }
+    f0980BreitWigner() : massDependence() { }
+    virtual ~f0980BreitWigner()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "f0980BreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "f0980BreitWigner"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<f0980BreitWigner> f0980BreitWignerPtr;
+typedef boost::shared_ptr<f0980BreitWigner> f0980BreitWignerPtr;
 
 
-	inline
-	f0980BreitWignerPtr
-	createF0980BreitWigner()
-	{
-		f0980BreitWignerPtr massDep(new f0980BreitWigner());
-		return massDep;
-	}
+inline
+f0980BreitWignerPtr
+createF0980BreitWigner()
+{
+    f0980BreitWignerPtr massDep(new f0980BreitWigner());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief Flatte for f_0(980) -> pi pi
-	/// [M. Ablikim et al, Phys. Let. B607, 243] BES II
-	class f0980Flatte : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief Flatte for f_0(980) -> pi pi
+/// [M. Ablikim et al, Phys. Let. B607, 243] BES II
+class f0980Flatte : public massDependence
+{
 
-	public:
+public:
 
-		f0980Flatte();
-		virtual ~f0980Flatte()           { }
+    f0980Flatte();
+    virtual ~f0980Flatte()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "f0980Flatte"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "f0980Flatte"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	private:
-		double _piChargedMass;
-		double _kaonChargedMass;
+private:
+    double _piChargedMass;
+    double _kaonChargedMass;
 
-	};
+};
 
 
-	typedef boost::shared_ptr<f0980Flatte> f0980FlattePtr;
+typedef boost::shared_ptr<f0980Flatte> f0980FlattePtr;
 
 
-	inline
-	f0980FlattePtr
-	createF0980Flatte()
-	{
-		f0980FlattePtr massDep(new f0980Flatte());
-		return massDep;
-	}
+inline
+f0980FlattePtr
+createF0980Flatte()
+{
+    f0980FlattePtr massDep(new f0980Flatte());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief Au-Morgan-Pennington parameterization of pi pi s-wave
-	/// [K.L. Au et al, Phys. Rev. D35, 1633] M solution.
-	/// we have introduced a small modification by setting the
-	/// off-diagonal elements of the M-matrix to zero.
-	class piPiSWaveAuMorganPenningtonM : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief Au-Morgan-Pennington parameterization of pi pi s-wave
+/// [K.L. Au et al, Phys. Rev. D35, 1633] M solution.
+/// we have introduced a small modification by setting the
+/// off-diagonal elements of the M-matrix to zero.
+class piPiSWaveAuMorganPenningtonM : public massDependence
+{
 
-	public:
+public:
 
-		piPiSWaveAuMorganPenningtonM();
-		virtual ~piPiSWaveAuMorganPenningtonM() { }
+    piPiSWaveAuMorganPenningtonM();
+    virtual ~piPiSWaveAuMorganPenningtonM() { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "piPiSWaveAuMorganPenningtonM"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "piPiSWaveAuMorganPenningtonM"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	protected:
+protected:
 
-		ublas::matrix<std::complex<double> >               _T;
-		std::vector<ublas::matrix<std::complex<double> > > _a;
-		std::vector<ublas::matrix<std::complex<double> > > _c;
-		ublas::matrix<double>                              _sP;
-		int                                                _vesSheet;
+    ublas::matrix<std::complex<double> >               _T;
+    std::vector<ublas::matrix<std::complex<double> > > _a;
+    std::vector<ublas::matrix<std::complex<double> > > _c;
+    ublas::matrix<double>                              _sP;
+    int                                                _vesSheet;
 
-		double _piChargedMass;
-		double _piNeutralMass;
-		double _kaonChargedMass;
-		double _kaonNeutralMass;
-		double _kaonMeanMass;
+    double _piChargedMass;
+    double _piNeutralMass;
+    double _kaonChargedMass;
+    double _kaonNeutralMass;
+    double _kaonMeanMass;
 
-	};
+};
 
 
-	typedef boost::shared_ptr<piPiSWaveAuMorganPenningtonM> piPiSWaveAuMorganPenningtonMPtr;
+typedef boost::shared_ptr<piPiSWaveAuMorganPenningtonM> piPiSWaveAuMorganPenningtonMPtr;
 
 
-	inline
-	piPiSWaveAuMorganPenningtonMPtr
-	createPiPiSWaveAuMorganPenningtonM()
-	{
-		piPiSWaveAuMorganPenningtonMPtr massDep(new piPiSWaveAuMorganPenningtonM());
-		return massDep;
-	}
+inline
+piPiSWaveAuMorganPenningtonMPtr
+createPiPiSWaveAuMorganPenningtonM()
+{
+    piPiSWaveAuMorganPenningtonMPtr massDep(new piPiSWaveAuMorganPenningtonM());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief old VES pi pi s-wave parameterization
-	/// [K.L. Au et al, Phys. Rev. D35, 1633] M solution.
-	/// brute force subtraction of the f0(980)
-	class piPiSWaveAuMorganPenningtonVes : public piPiSWaveAuMorganPenningtonM {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief old VES pi pi s-wave parameterization
+/// [K.L. Au et al, Phys. Rev. D35, 1633] M solution.
+/// brute force subtraction of the f0(980)
+class piPiSWaveAuMorganPenningtonVes : public piPiSWaveAuMorganPenningtonM
+{
 
-	public:
+public:
 
-		piPiSWaveAuMorganPenningtonVes();
-		virtual ~piPiSWaveAuMorganPenningtonVes() { }
+    piPiSWaveAuMorganPenningtonVes();
+    virtual ~piPiSWaveAuMorganPenningtonVes() { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "piPiSWaveAuMorganPenningtonVes"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "piPiSWaveAuMorganPenningtonVes"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<piPiSWaveAuMorganPenningtonVes> piPiSWaveAuMorganPenningtonVesPtr;
+typedef boost::shared_ptr<piPiSWaveAuMorganPenningtonVes> piPiSWaveAuMorganPenningtonVesPtr;
 
 
-	inline
-	piPiSWaveAuMorganPenningtonVesPtr
-	createPiPiSWaveAuMorganPenningtonVes()
-	{
-		piPiSWaveAuMorganPenningtonVesPtr massDep(new piPiSWaveAuMorganPenningtonVes());
-		return massDep;
-	}
+inline
+piPiSWaveAuMorganPenningtonVesPtr
+createPiPiSWaveAuMorganPenningtonVes()
+{
+    piPiSWaveAuMorganPenningtonVesPtr massDep(new piPiSWaveAuMorganPenningtonVes());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// Brief Kachaev's version of the AMP pi pi s-wave parameterization
-	///
-	/// from the original fortran code:
-	/// [K.L. Au et al, Phys. Rev. D35, 1633] M solution.
-	/// 04-Mar-2003 See eps_k1.for for description.
-	/// here matrix M = K^{-1} is parametrized with one pole.
-	/// misprint in the article (other than in K1--K3 solutions)
-	/// was corrected.
-	///
-	/// 14-Mar-2003 nice amplitude for pi-pi S-wave without f0(975).
-	/// it is smooth and nicely tends to zero after approx 1.5 GeV.
-	/// f0(975) pole excluded; coupling to KK zeroed; set C411=C422=0.
-	/// the largest effect from C411, zeroing of C422 looks insignificant.
-	class piPiSWaveAuMorganPenningtonKachaev : public piPiSWaveAuMorganPenningtonM {
+//////////////////////////////////////////////////////////////////////////////
+/// Brief Kachaev's version of the AMP pi pi s-wave parameterization
+///
+/// from the original fortran code:
+/// [K.L. Au et al, Phys. Rev. D35, 1633] M solution.
+/// 04-Mar-2003 See eps_k1.for for description.
+/// here matrix M = K^{-1} is parametrized with one pole.
+/// misprint in the article (other than in K1--K3 solutions)
+/// was corrected.
+///
+/// 14-Mar-2003 nice amplitude for pi-pi S-wave without f0(975).
+/// it is smooth and nicely tends to zero after approx 1.5 GeV.
+/// f0(975) pole excluded; coupling to KK zeroed; set C411=C422=0.
+/// the largest effect from C411, zeroing of C422 looks insignificant.
+class piPiSWaveAuMorganPenningtonKachaev : public piPiSWaveAuMorganPenningtonM
+{
 
-	public:
+public:
 
-		piPiSWaveAuMorganPenningtonKachaev();
-		virtual ~piPiSWaveAuMorganPenningtonKachaev() { }
+    piPiSWaveAuMorganPenningtonKachaev();
+    virtual ~piPiSWaveAuMorganPenningtonKachaev() { }
 
-		virtual std::string name() const { return "piPiSWaveAuMorganPenningtonKachaev"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "piPiSWaveAuMorganPenningtonKachaev"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<piPiSWaveAuMorganPenningtonKachaev> piPiSWaveAuMorganPenningtonKachaevPtr;
+typedef boost::shared_ptr<piPiSWaveAuMorganPenningtonKachaev> piPiSWaveAuMorganPenningtonKachaevPtr;
 
 
-	inline
-	piPiSWaveAuMorganPenningtonKachaevPtr
-	createPiPiSWaveAuMorganPenningtonKachaev()
-	{
-		piPiSWaveAuMorganPenningtonKachaevPtr massDep(new piPiSWaveAuMorganPenningtonKachaev());
-		return massDep;
-	}
+inline
+piPiSWaveAuMorganPenningtonKachaevPtr
+createPiPiSWaveAuMorganPenningtonKachaev()
+{
+    piPiSWaveAuMorganPenningtonKachaevPtr massDep(new piPiSWaveAuMorganPenningtonKachaev());
+    return massDep;
+}
 
 
-	//////////////////////////////////////////////////////////////////////////////
-	/// combined amplitude for rho(1450)/rho(1700)
-	/// [A. Donnachie et al, Z. Phys. C 33 (1987) 407] http://dx.doi.org/10.1007/BF01552547, sec. 4
-	class rhoPrimeMassDep : public massDependence {
+//////////////////////////////////////////////////////////////////////////////
+/// combined amplitude for rho(1450)/rho(1700)
+/// [A. Donnachie et al, Z. Phys. C 33 (1987) 407] http://dx.doi.org/10.1007/BF01552547, sec. 4
+class rhoPrimeMassDep : public massDependence
+{
 
-	public:
+public:
 
-		rhoPrimeMassDep() : massDependence() { }
-		virtual ~rhoPrimeMassDep()           { }
+    rhoPrimeMassDep() : massDependence() { }
+    virtual ~rhoPrimeMassDep()           { }
 
-		virtual std::complex<double> amp(const isobarDecayVertex& v);
+    virtual std::complex<double> amp(const isobarDecayVertex& v);
 
-		virtual std::string name() const { return "rhoPrimeMassDep"; }  ///< returns label used in graph visualization, reporting, and key file
+    virtual std::string name() const { return "rhoPrimeMassDep"; }  ///< returns label used in graph visualization, reporting, and key file
 
-	};
+};
 
 
-	typedef boost::shared_ptr<rhoPrimeMassDep> rhoPrimeMassDepPtr;
+typedef boost::shared_ptr<rhoPrimeMassDep> rhoPrimeMassDepPtr;
 
 
-	inline
-	rhoPrimeMassDepPtr
-	createRhoPrimeMassDep()
-	{
-		rhoPrimeMassDepPtr massDep(new rhoPrimeMassDep());
-		return massDep;
-	}
+inline
+rhoPrimeMassDepPtr
+createRhoPrimeMassDep()
+{
+    rhoPrimeMassDepPtr massDep(new rhoPrimeMassDep());
+    return massDep;
+}
 
 
 }  // namespace rpwa

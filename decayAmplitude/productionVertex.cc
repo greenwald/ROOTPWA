@@ -43,10 +43,10 @@ bool productionVertex::_debug = false;
 
 
 productionVertex::productionVertex()
-	: interactionVertex()
+    : interactionVertex()
 {
-	if (_debug)
-		printDebug << "constructed " << *this << endl;
+    if (_debug)
+        printDebug << "constructed " << *this << endl;
 }
 
 

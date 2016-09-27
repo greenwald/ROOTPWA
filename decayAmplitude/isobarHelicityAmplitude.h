@@ -40,66 +40,67 @@
 namespace rpwa {
 
 
-	class isobarHelicityAmplitude;
-	typedef boost::shared_ptr<isobarHelicityAmplitude> isobarHelicityAmplitudePtr;
+class isobarHelicityAmplitude;
+typedef boost::shared_ptr<isobarHelicityAmplitude> isobarHelicityAmplitudePtr;
 
 
-	class isobarHelicityAmplitude : public isobarAmplitude {
+class isobarHelicityAmplitude : public isobarAmplitude
+{
 
-	public:
+public:
 
-		isobarHelicityAmplitude();
-		isobarHelicityAmplitude(const isobarDecayTopologyPtr& decay);
-		virtual ~isobarHelicityAmplitude();
+    isobarHelicityAmplitude();
+    isobarHelicityAmplitude(const isobarDecayTopologyPtr& decay);
+    virtual ~isobarHelicityAmplitude();
 
-		static TLorentzRotation hfTransform(const TLorentzVector& daughterLv);  ///< constructs Lorentz-transformation to helicity RF of daughter particle
+    static TLorentzRotation hfTransform(const TLorentzVector& daughterLv);  ///< constructs Lorentz-transformation to helicity RF of daughter particle
 
-		void setUseLorentzFactors (const bool& useLorentzFactors = true)   { _useLorentzFactors = useLorentzFactors; }
-		void setLorentzFactorIndex(const unsigned int& lorentzFactorIndex) { _lorentzFactorIndex = lorentzFactorIndex; }
+    void setUseLorentzFactors (const bool& useLorentzFactors = true)   { _useLorentzFactors = useLorentzFactors; }
+    void setLorentzFactorIndex(const unsigned int& lorentzFactorIndex) { _lorentzFactorIndex = lorentzFactorIndex; }
 
-		void setUseLorentzFactorsNonRelLimit(const bool& useLorentzFactorsNonRelLimit = true)
-		{
-			_useLorentzFactorsInNonRelativisticLimit = useLorentzFactorsNonRelLimit;
-		}
+    void setUseLorentzFactorsNonRelLimit(const bool& useLorentzFactorsNonRelLimit = true)
+    {
+        _useLorentzFactorsInNonRelativisticLimit = useLorentzFactorsNonRelLimit;
+    }
 
-		const bool&         useLorentzFactors()            const { return _useLorentzFactors; }
-		const unsigned int& lorentzFactorIndex()           const { return _lorentzFactorIndex; }
-		const bool&         useLorentzFactorsNonRelLimit() const { return _useLorentzFactorsInNonRelativisticLimit; }
+    const bool&         useLorentzFactors()            const { return _useLorentzFactors; }
+    const unsigned int& lorentzFactorIndex()           const { return _lorentzFactorIndex; }
+    const bool&         useLorentzFactorsNonRelLimit() const { return _useLorentzFactorsInNonRelativisticLimit; }
 
-		unsigned int getLorentzFactorSplittingNumber();
+    unsigned int getLorentzFactorSplittingNumber();
 
-		std::string name() const { return "isobarHelicityAmplitude"; }
+    std::string name() const { return "isobarHelicityAmplitude"; }
 
-		static bool debug() { return _debug; }                             ///< returns debug flag
-		static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
-
-
-	private:
-
-		void transformDaughters() const;  ///< boosts Lorentz-vectors of decay daughters into frames where angular distributions are defined
-
-		std::complex<double> twoBodyDecayAmplitude
-		(const isobarDecayVertexPtr& vertex,
-		 const bool                  topVertex) const;  ///< calculates amplitude for two-body decay a -> b + c; where b and c are stable
-
-		bool _useLorentzFactors;
-		bool _useLorentzFactorsInNonRelativisticLimit;
-		unsigned int _lorentzFactorIndex;
-		bool _lorentzFactorSplittingCountingRun;
-		mutable unsigned int _lorentzFactorSplittingCounter;
-
-		static bool _debug;  ///< if set to true, debug messages are printed
-
-	};
+    static bool debug() { return _debug; }                             ///< returns debug flag
+    static void setDebug(const bool debug = true) { _debug = debug; }  ///< sets debug flag
 
 
-	inline
-	isobarHelicityAmplitudePtr
-	createIsobarHelicityAmplitude(const isobarDecayTopologyPtr& decay)
-	{
-		isobarHelicityAmplitudePtr amp(new isobarHelicityAmplitude(decay));
-		return amp;
-	}
+private:
+
+    void transformDaughters() const;  ///< boosts Lorentz-vectors of decay daughters into frames where angular distributions are defined
+
+    std::complex<double> twoBodyDecayAmplitude
+    (const isobarDecayVertexPtr& vertex,
+     const bool                  topVertex) const;  ///< calculates amplitude for two-body decay a -> b + c; where b and c are stable
+
+    bool _useLorentzFactors;
+    bool _useLorentzFactorsInNonRelativisticLimit;
+    unsigned int _lorentzFactorIndex;
+    bool _lorentzFactorSplittingCountingRun;
+    mutable unsigned int _lorentzFactorSplittingCounter;
+
+    static bool _debug;  ///< if set to true, debug messages are printed
+
+};
+
+
+inline
+isobarHelicityAmplitudePtr
+createIsobarHelicityAmplitude(const isobarDecayTopologyPtr& decay)
+{
+    isobarHelicityAmplitudePtr amp(new isobarHelicityAmplitude(decay));
+    return amp;
+}
 
 
 } // namespace rpwa
